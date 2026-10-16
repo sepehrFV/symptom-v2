@@ -1,0 +1,519 @@
+# =============================================================================
+# CLINICAL VIGNETTES  -  the "unit tests" of the diagnosis system
+#
+# Each vignette is a short case with the answers a user would give and the
+# outcome a veterinary cardiologist would EXPECT. They are the quickest way
+# for senior veterinarians to challenge the system: edit/add cases here and run
+#       python evaluate.py --vignettes-only
+#
+# expect keys (all optional, all must hold):
+#   top1_in        : the #1 cardiac disease is one of these ids
+#   top3_any       : at least one of these ids is within the top 3
+#   top3_all       : every one of these ids is within the top 3
+#   not_top1       : the #1 disease must NOT be one of these
+#   cardiac_in     : cardiac-likelihood band in [high, moderate, low, very_low]
+#   triage_min     : emergency | urgent | routine   (at least this urgent)
+#   nc_cause_top   : most likely NON-cardiac syndrome id
+#
+# AUTHORSHIP: drafted by the AI assistant from textbook prototypes together with
+# the KB. They therefore test internal consistency + textbook behaviour, NOT real
+# world accuracy. Senior-vet review of expectations is required.
+# status: draft_ai_pending_vet_review
+# =============================================================================
+vignettes:
+# ------------------------------------------------------------- owner mode --
+- id: O01
+  title: Old Cavalier with night cough, tires on walks, known murmur
+  species: dog
+  age_group: senior
+  breed_group: cavalier
+  audience: owner
+  answers: {cough: yes, exercise_intolerance: yes, heart_murmur: yes, tachypnea_resting: yes}
+  expect: {top1_in: [mmvd], cardiac_in: [high]}
+
+- id: O02
+  title: Senior small-breed dog, murmur known, otherwise asymptomatic
+  species: dog
+  age_group: senior
+  breed_group: small_toy
+  audience: owner
+  answers: {heart_murmur: yes, cough: no, exercise_intolerance: no, tachypnea_resting: no, syncope: no}
+  expect: {top1_in: [mmvd], cardiac_in: [high, moderate]}
+
+- id: O03
+  title: Adult Doberman - collapse, tires easily, cough, fast breathing
+  species: dog
+  age_group: adult
+  breed_group: doberman
+  audience: owner
+  answers: {collapse: yes, exercise_intolerance: yes, cough: yes, tachypnea_resting: yes}
+  expect: {top3_any: [dcm], cardiac_in: [high, moderate], triage_min: emergency}
+
+- id: O04
+  title: Adult Boxer with fainting episodes and family history
+  species: dog
+  age_group: adult
+  breed_group: boxer
+  audience: owner
+  answers: {syncope: yes, exercise_intolerance: yes, family_history_cardiac: yes}
+  expect: {top3_any: [arvc], triage_min: urgent}
+
+- id: O05
+  title: Toy poodle puppy - murmur, exercise intolerance, cough, fast breathing
+  species: dog
+  age_group: young
+  breed_group: small_toy
+  audience: owner
+  answers: {heart_murmur: yes, exercise_intolerance: yes, cough: yes, tachypnea_resting: yes}
+  expect: {top3_any: [pda, mitral_dysplasia], not_top1: [mmvd]}
+
+- id: O06
+  title: Young English Bulldog - murmur, fainting on exertion
+  species: dog
+  age_group: young
+  breed_group: brachycephalic
+  audience: owner
+  answers: {heart_murmur: yes, syncope: yes, exercise_intolerance: yes}
+  expect: {top3_any: [pulmonic_stenosis], not_top1: [mmvd]}
+
+- id: O07
+  title: Young Golden Retriever - murmur, exertional fainting, family history
+  species: dog
+  age_group: young
+  breed_group: large
+  audience: owner
+  answers: {heart_murmur: yes, syncope: yes, family_history_cardiac: yes}
+  expect: {top3_any: [subaortic_stenosis], triage_min: urgent}
+
+- id: O08
+  title: Young Labrador with swollen abdomen, tires easily, murmur
+  species: dog
+  age_group: young
+  breed_group: large
+  audience: owner
+  answers: {abdominal_distension: yes, exercise_intolerance: yes, heart_murmur: yes, cough: no}
+  expect: {top3_any: [tvd, cor_triatriatum]}
+
+- id: O09
+  title: German shepherd puppy regurgitating after meals, poor growth
+  species: dog
+  age_group: young
+  breed_group: large
+  audience: owner
+  answers: {regurgitation: yes, failure_to_thrive: yes, cough: yes}
+  expect: {top1_in: [prra]}
+
+- id: O10
+  title: Adult dog, endemic area, no prophylaxis, cough, exercise intolerance, weight loss
+  species: dog
+  age_group: adult
+  breed_group: medium
+  audience: owner
+  answers: {heartworm_exposure: yes, cough: yes, exercise_intolerance: yes, weight_loss: yes}
+  expect: {top3_any: [heartworm], cardiac_in: [high, moderate]}
+
+- id: O11
+  title: Senior large-breed dog - sudden collapse, pale gums, swollen abdomen
+  species: dog
+  age_group: senior
+  breed_group: large
+  audience: owner
+  answers: {collapse: yes, pale_gums: yes, abdominal_distension: yes, weakness: yes}
+  expect: {top3_any: [ra_hemangiosarcoma, pericardial_effusion], triage_min: emergency}
+
+- id: O12
+  title: Senior large dog - swollen abdomen, weakness, lethargy, exercise intolerance
+  species: dog
+  age_group: senior
+  breed_group: large
+  audience: owner
+  answers: {abdominal_distension: yes, weakness: yes, lethargy: yes, exercise_intolerance: yes}
+  expect: {top3_any: [pericardial_effusion, ra_hemangiosarcoma, heart_base_tumor]}
+
+- id: O13
+  title: Adult cat - open-mouth breathing, fast breathing, lethargy, poor appetite
+  species: cat
+  age_group: adult
+  breed_group: domestic
+  audience: owner
+  answers: {open_mouth_breathing: yes, tachypnea_resting: yes, lethargy: yes, decreased_appetite: yes}
+  expect: {top3_any: [hcm, rcm_unclassified], triage_min: emergency, cardiac_in: [high, moderate]}
+
+- id: O14
+  title: Adult Maine Coon, murmur known, family history, no symptoms
+  species: cat
+  age_group: adult
+  breed_group: maine_coon_ragdoll
+  audience: owner
+  answers: {heart_murmur: yes, family_history_cardiac: yes, tachypnea_resting: no, lethargy: no}
+  expect: {top1_in: [hcm]}
+
+- id: O15
+  title: Cat with sudden hind-limb paralysis, pain, cold paws
+  species: cat
+  age_group: adult
+  breed_group: domestic
+  audience: owner
+  answers: {hind_limb_paralysis: yes, painful_limbs: yes, cold_extremities: yes}
+  expect: {top1_in: [ate], triage_min: emergency}
+
+- id: O16
+  title: Senior cat - weight loss, ravenous appetite, restless, drinks a lot
+  species: cat
+  age_group: senior
+  breed_group: domestic
+  audience: owner
+  answers: {weight_loss: yes, polyphagia: yes, restlessness: yes, polyuria_polydipsia: yes, tachypnea_resting: no, open_mouth_breathing: no}
+  expect: {top3_any: [thyrotoxic_cm], cardiac_in: [low, moderate, very_low], nc_cause_top: hyperthyroid_cat}
+
+- id: O17
+  title: Senior cat - sudden blindness, drinks a lot
+  species: cat
+  age_group: senior
+  breed_group: domestic
+  audience: owner
+  answers: {sudden_blindness: yes, polyuria_polydipsia: yes}
+  expect: {top3_any: [hypertensive_hd]}
+
+- id: O18
+  title: Senior dog - lethargy only
+  species: dog
+  age_group: senior
+  breed_group: medium
+  audience: owner
+  answers: {lethargy: yes}
+  expect: {cardiac_in: [low, very_low, moderate]}
+
+- id: O19
+  title: Adult dog - vomiting and poor appetite
+  species: dog
+  age_group: adult
+  breed_group: medium
+  audience: owner
+  answers: {vomiting: yes, decreased_appetite: yes}
+  expect: {cardiac_in: [low, very_low], nc_cause_top: gi_metabolic}
+
+- id: O20
+  title: Adult cat - cough only
+  species: cat
+  age_group: adult
+  breed_group: domestic
+  audience: owner
+  answers: {cough: yes, dyspnea: no, tachypnea_resting: no, lethargy: no}
+  expect: {cardiac_in: [low, very_low], nc_cause_top: airway_disease}
+
+- id: O21
+  title: Dog - labored breathing at rest with blue gums
+  species: dog
+  age_group: adult
+  breed_group: medium
+  audience: owner
+  answers: {dyspnea: yes, cyanosis: yes}
+  expect: {triage_min: emergency}
+
+- id: O22
+  title: Senior small dog - fainting and known murmur
+  species: dog
+  age_group: senior
+  breed_group: small_toy
+  audience: owner
+  answers: {syncope: yes, heart_murmur: yes, cough: yes}
+  expect: {top3_any: [mmvd, sss], triage_min: urgent}
+
+- id: O23
+  title: Senior Schnauzer - episodic fainting, weakness, no murmur
+  species: dog
+  age_group: senior
+  breed_group: small_toy
+  audience: owner
+  answers: {syncope: yes, weakness: yes, heart_murmur: no, cough: no}
+  expect: {top3_any: [sss, av_block], triage_min: urgent}
+
+- id: O24
+  title: Adult dog - cough only, no murmur, normal energy
+  species: dog
+  age_group: adult
+  breed_group: small_toy
+  audience: owner
+  answers: {cough: yes, heart_murmur: no, exercise_intolerance: no, tachypnea_resting: no, lethargy: no}
+  expect: {cardiac_in: [low, very_low, moderate], nc_cause_top: airway_disease}
+
+- id: O25
+  title: Kitten with a murmur found at vaccination, no signs
+  species: cat
+  age_group: young
+  breed_group: domestic
+  audience: owner
+  answers: {heart_murmur: yes, tachypnea_resting: no, lethargy: no, decreased_appetite: no, failure_to_thrive: no}
+  expect: {nc_cause_top: benign_incidental}
+
+# --------------------------------------------------------- clinician mode --
+- id: C01
+  title: Classic MMVD work-up
+  species: dog
+  age_group: senior
+  breed_group: small_toy
+  audience: clinician
+  answers: {murmur_left_apical_systolic: yes, echo_la_enlargement: yes, echo_mitral_valve_lesion: yes, xray_generalized_cardiomegaly: yes, cough: yes}
+  expect: {top1_in: [mmvd], cardiac_in: [high]}
+
+- id: C02
+  title: Feline HCM with gallop and LA enlargement
+  species: cat
+  age_group: adult
+  breed_group: maine_coon_ragdoll
+  audience: clinician
+  answers: {echo_lv_hypertrophy: yes, echo_la_enlargement: yes, gallop_rhythm: yes, high_total_t4: no, hypertension_measured: no}
+  expect: {top1_in: [hcm], cardiac_in: [high]}
+
+- id: C03
+  title: Feline restrictive pattern - giant atria, normal walls, dyspnea
+  species: cat
+  age_group: senior
+  breed_group: domestic
+  audience: clinician
+  answers: {echo_restrictive_pattern: yes, echo_la_enlargement: yes, echo_lv_hypertrophy: no, dyspnea: yes, high_total_t4: no}
+  expect: {top1_in: [rcm_unclassified], cardiac_in: [high]}
+
+- id: C04
+  title: Doberman DCM - dilated LV, low FS, VPCs
+  species: dog
+  age_group: adult
+  breed_group: doberman
+  audience: clinician
+  answers: {echo_lv_dilation_low_fs: yes, ecg_ventricular_arrhythmia: yes, exercise_intolerance: yes}
+  expect: {top1_in: [dcm], cardiac_in: [high]}
+
+- id: C05
+  title: Boxer with VPCs and syncope, structurally normal echo
+  species: dog
+  age_group: adult
+  breed_group: boxer
+  audience: clinician
+  answers: {ecg_ventricular_arrhythmia: yes, syncope: yes, echo_lv_dilation_low_fs: no, echo_la_enlargement: no, echo_lv_hypertrophy: no}
+  expect: {top1_in: [arvc]}
+
+- id: C06
+  title: PDA - continuous murmur, bounding pulses, ductal flow
+  species: dog
+  age_group: young
+  breed_group: small_toy
+  audience: clinician
+  answers: {murmur_continuous: yes, bounding_pulse: yes, echo_ductal_flow: yes}
+  expect: {top1_in: [pda], cardiac_in: [high]}
+
+- id: C07
+  title: Pulmonic stenosis - left basilar murmur, high PV velocity, RV hypertrophy
+  species: dog
+  age_group: young
+  breed_group: brachycephalic
+  audience: clinician
+  answers: {murmur_left_basilar_systolic: yes, echo_pulmonic_obstruction: yes, echo_rv_pressure_overload: yes}
+  expect: {top1_in: [pulmonic_stenosis]}
+
+- id: C08
+  title: Subaortic stenosis - left basilar murmur, LVOT obstruction, LV hypertrophy
+  species: dog
+  age_group: young
+  breed_group: boxer
+  audience: clinician
+  answers: {murmur_left_basilar_systolic: yes, echo_subaortic_obstruction: yes, echo_lv_hypertrophy: yes, echo_pulmonic_obstruction: no}
+  expect: {top1_in: [subaortic_stenosis]}
+
+- id: C09
+  title: RA hemangiosarcoma - collapse, effusion + RA mass, anemia
+  species: dog
+  age_group: senior
+  breed_group: large
+  audience: clinician
+  answers: {collapse: yes, echo_pericardial_effusion: yes, echo_cardiac_mass: yes, anemia: yes, pale_gums: yes}
+  expect: {top1_in: [ra_hemangiosarcoma], triage_min: emergency}
+
+- id: C10
+  title: Idiopathic pericardial effusion - muffled sounds, JVD, alternans, no mass
+  species: dog
+  age_group: adult
+  breed_group: large
+  audience: clinician
+  answers: {echo_pericardial_effusion: yes, muffled_heart_sounds: yes, jugular_distension: yes, ecg_low_voltage_alternans: yes, echo_cardiac_mass: no}
+  expect: {top1_in: [pericardial_effusion]}
+
+- id: C11
+  title: Pulmonary hypertension - TR >3.4 m/s, RV pressure overload, exertional syncope
+  species: dog
+  age_group: senior
+  breed_group: small_toy
+  audience: clinician
+  answers: {echo_high_tr_velocity: yes, echo_rv_pressure_overload: yes, syncope: yes, exercise_intolerance: yes, echo_pulmonic_obstruction: no}
+  expect: {top1_in: [pulmonary_hypertension]}
+
+- id: C12
+  title: Heartworm - antigen positive, enlarged pulmonary arteries
+  species: dog
+  age_group: adult
+  breed_group: large
+  audience: clinician
+  answers: {heartworm_antigen_positive: yes, xray_enlarged_pulmonary_arteries: yes, cough: yes}
+  expect: {top1_in: [heartworm]}
+
+- id: C13
+  title: Thyrotoxic cat - high T4, nodule, tachycardia, weight loss
+  species: cat
+  age_group: senior
+  breed_group: domestic
+  audience: clinician
+  answers: {high_total_t4: yes, palpable_thyroid_nodule: yes, tachycardia: yes, weight_loss: yes, echo_lv_hypertrophy: yes}
+  expect: {top1_in: [thyrotoxic_cm]}
+
+- id: C14
+  title: Atrial fibrillation on ECG with LA enlargement
+  species: dog
+  age_group: adult
+  breed_group: giant
+  audience: clinician
+  answers: {ecg_atrial_fibrillation: yes, irregular_rhythm: yes, tachycardia: yes, echo_la_enlargement: yes}
+  expect: {top1_in: [atrial_fibrillation]}
+
+- id: C15
+  title: Sinus pauses with syncope in a Schnauzer
+  species: dog
+  age_group: senior
+  breed_group: small_toy
+  audience: clinician
+  answers: {ecg_sinus_pauses: yes, syncope: yes, bradycardia: yes}
+  expect: {top1_in: [sss]}
+
+- id: C16
+  title: High-grade AV block with bradycardia and syncope
+  species: dog
+  age_group: senior
+  breed_group: medium
+  audience: clinician
+  answers: {ecg_high_grade_av_block: yes, bradycardia: yes, syncope: yes}
+  expect: {top1_in: [av_block]}
+
+- id: C17
+  title: Atrial standstill with hyperkalemia and weakness
+  species: dog
+  age_group: adult
+  breed_group: medium
+  audience: clinician
+  answers: {ecg_atrial_standstill: yes, hyperkalemia: yes, weakness: yes, bradycardia: yes}
+  expect: {top3_any: [atrial_standstill]}
+
+- id: C18
+  title: Endocarditis - fever, new murmur, vegetation, positive blood culture
+  species: dog
+  age_group: adult
+  breed_group: large
+  audience: clinician
+  answers: {fever: yes, heart_murmur: yes, echo_vegetation: yes, blood_culture_positive: yes, lethargy: yes}
+  expect: {top1_in: [endocarditis], triage_min: urgent}
+
+- id: C19
+  title: Young dog - right-to-left shunt, polycythemia, cyanosis, collapse
+  species: dog
+  age_group: young
+  breed_group: brachycephalic
+  audience: clinician
+  answers: {echo_right_to_left_shunt: yes, polycythemia: yes, cyanosis: yes, collapse: yes}
+  expect: {top3_all: [tof, reversed_shunt], triage_min: emergency}
+
+- id: C20
+  title: VSD - right-sided murmur, septal defect on echo, LA enlargement
+  species: cat
+  age_group: young
+  breed_group: domestic
+  audience: clinician
+  answers: {murmur_right_systolic: yes, echo_septal_defect: yes, echo_la_enlargement: yes}
+  expect: {top1_in: [vsd]}
+
+- id: C21
+  title: Hypertensive cat - BP >160, retinal lesions, azotemia
+  species: cat
+  age_group: senior
+  breed_group: domestic
+  audience: clinician
+  answers: {hypertension_measured: yes, retinal_lesions: yes, azotemia: yes}
+  expect: {top1_in: [hypertensive_hd]}
+
+- id: C22
+  title: Acute myocarditis - young dog, VPCs, high troponin, fever
+  species: dog
+  age_group: young
+  breed_group: medium
+  audience: clinician
+  answers: {ecg_ventricular_arrhythmia: yes, troponin_elevated: yes, fever: yes, lethargy: yes, echo_cardiac_mass: no, echo_pericardial_effusion: no}
+  expect: {top3_any: [myocarditis]}
+
+- id: C23
+  title: Tricuspid dysplasia - ascites, right apical murmur, dysplastic valve
+  species: dog
+  age_group: young
+  breed_group: large
+  audience: clinician
+  answers: {echo_tricuspid_dysplasia: yes, abdominal_distension: yes, murmur_right_systolic: yes}
+  expect: {top1_in: [tvd]}
+
+- id: C24
+  title: Dyspneic dog - bronchial pattern, normal NT-proBNP, no murmur
+  species: dog
+  age_group: senior
+  breed_group: small_toy
+  audience: clinician
+  answers: {dyspnea: yes, cough: yes, xray_bronchial_pattern: yes, ntprobnp_elevated: no, heart_murmur: no, echo_la_enlargement: no}
+  expect: {cardiac_in: [low, very_low], nc_cause_top: airway_disease}
+
+- id: C25
+  title: Dyspneic cat - pleural effusion, LA enlargement, high NT-proBNP
+  species: cat
+  age_group: adult
+  breed_group: domestic
+  audience: clinician
+  answers: {dyspnea: yes, pleural_effusion: yes, echo_la_enlargement: yes, ntprobnp_elevated: yes, gallop_rhythm: yes}
+  expect: {cardiac_in: [high], top3_any: [hcm, rcm_unclassified, dcm]}
+
+- id: C26
+  title: Mitral dysplasia in a young large-breed dog
+  species: dog
+  age_group: young
+  breed_group: large
+  audience: clinician
+  answers: {murmur_left_apical_systolic: yes, echo_mitral_valve_lesion: yes, echo_la_enlargement: yes}
+  expect: {top1_in: [mitral_dysplasia], not_top1: [mmvd]}
+
+- id: C27
+  title: Dog aortic thromboembolism - painful limbs, absent femoral pulse (rare in dogs)
+  species: dog
+  age_group: adult
+  breed_group: medium
+  audience: clinician
+  answers: {absent_femoral_pulse: yes, painful_limbs: yes, hind_limb_paralysis: yes}
+  expect: {top1_in: [ate], triage_min: emergency}
+
+- id: C28
+  title: Heart-base tumor in a Boxer - effusion plus aortic-root mass
+  species: dog
+  age_group: senior
+  breed_group: boxer
+  audience: clinician
+  answers: {echo_pericardial_effusion: yes, echo_cardiac_mass: yes, collapse: no, anemia: no}
+  expect: {top1_in: [heart_base_tumor]}
+
+- id: C29
+  title: Pulmonary thromboembolism - acute dyspnea, risk factor, clear radiographs
+  species: dog
+  age_group: adult
+  breed_group: medium
+  audience: clinician
+  answers: {dyspnea: yes, tachypnea_resting: yes, thromboembolic_risk: yes, xray_pulmonary_edema: no, xray_generalized_cardiomegaly: no, echo_la_enlargement: no}
+  expect: {top3_any: [pulmonary_thromboembolism], triage_min: emergency}
+
+- id: C30
+  title: Atrial septal defect - soft left basilar murmur, defect on echo
+  species: dog
+  age_group: young
+  breed_group: medium
+  audience: clinician
+  answers: {murmur_left_basilar_systolic: yes, echo_septal_defect: yes, xray_rv_enlargement: yes, echo_pulmonic_obstruction: no}
+  expect: {top3_any: [asd, vsd]}

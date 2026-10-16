@@ -1,0 +1,114 @@
+# =============================================================================
+# GLOBAL SETTINGS OF THE CLINICAL KNOWLEDGE BASE
+# Everything here is editable by a veterinarian; no code change is needed.
+# =============================================================================
+kb_version: "2.0.0-draft"
+status: "AI-drafted from published veterinary cardiology references; NOT yet reviewed by a board-certified cardiologist"
+
+# --- qualitative grade -> probability -----------------------------------------
+# P(sign present | disease, in an animal that is clinically presenting)
+grades:
+  A: 0.92   # almost always / defining finding
+  B: 0.75   # very common
+  C: 0.50   # common
+  D: 0.30   # occasional
+  E: 0.15   # uncommon
+  F: 0.06   # rare
+  G: 0.02   # very rare
+
+# --- how reliable are the answers? ------------------------------------------
+# miss      : P(a truly present sign is reported absent)
+# false_pos : P(a truly absent sign is reported present)
+observation:
+  owner:   {miss: 0.12, false_pos: 0.03}
+  history: {miss: 0.10, false_pos: 0.02}
+  exam:    {miss: 0.08, false_pos: 0.02}
+  test:    {miss: 0.04, false_pos: 0.01}
+
+# relative "cost" of asking each level (used by the question selector)
+question_cost: {owner: 1.0, history: 1.2, exam: 2.0, test: 3.5}
+
+# --- who is using the tool ------------------------------------------------------
+audiences:
+  owner:     {levels: [owner, history], non_cardiac_prior: 0.60}
+  clinician: {levels: [owner, history, exam, test], non_cardiac_prior: 0.40}
+
+# --- demographics -------------------------------------------------------------
+age_groups:
+  young:  {label_fa: "کمتر از ۱ سال", label_en: "< 1 year", population: 0.20}
+  adult:  {label_fa: "۱ تا ۷ سال", label_en: "1-7 years", population: 0.45}
+  senior: {label_fa: "بیش از ۷ سال", label_en: "> 7 years", population: 0.35}
+
+species:
+  dog: {label_fa: "سگ", label_en: "Dog", java: CANINE}
+  cat: {label_fa: "گربه", label_en: "Cat", java: FELINE}
+
+# population share of each breed group (used when breed is unknown or to
+# normalise breed multipliers so that the average multiplier equals 1)
+breed_groups:
+  dog:
+    unknown:          {label_fa: "نامشخص", label_en: "Unknown / mixed", population: 0.0}
+    cavalier:         {label_fa: "کاوالیر کینگ چارلز اسپانیل", label_en: "Cavalier King Charles Spaniel", population: 0.03}
+    small_toy:        {label_fa: "نژاد کوچک/تویی (زیر ۱۰ کیلو)", label_en: "Small / toy breed (<10 kg)", population: 0.30}
+    medium:           {label_fa: "نژاد متوسط (۱۰ تا ۲۵ کیلو)", label_en: "Medium breed (10-25 kg)", population: 0.22}
+    large:            {label_fa: "نژاد بزرگ (۲۵ تا ۴۵ کیلو)", label_en: "Large breed (25-45 kg)", population: 0.25}
+    giant:            {label_fa: "نژاد غول‌پیکر (بیش از ۴۵ کیلو)", label_en: "Giant breed (>45 kg)", population: 0.03}
+    boxer:            {label_fa: "باکسر", label_en: "Boxer", population: 0.03}
+    doberman:         {label_fa: "دوبرمن", label_en: "Doberman", population: 0.02}
+    brachycephalic:   {label_fa: "براکی‌سفال (بولداگ، پاگ، بوستون تریر)", label_en: "Brachycephalic (bulldog, pug, Boston terrier)", population: 0.12}
+  cat:
+    unknown:          {label_fa: "نامشخص", label_en: "Unknown / mixed", population: 0.0}
+    domestic:         {label_fa: "گربهٔ خانگی (شورت‌هیر/لانگ‌هیر)", label_en: "Domestic shorthair / longhair", population: 0.80}
+    maine_coon_ragdoll: {label_fa: "مین‌کون یا رگدال", label_en: "Maine Coon / Ragdoll", population: 0.06}
+    other_pedigree:   {label_fa: "سایر نژادهای اصیل (پرشین، بریتیش، اسفینکس...)", label_en: "Other pedigree (Persian, British SH, Sphynx...)", population: 0.14}
+
+# --- stage model used by the simulator (and the ML model) -------------------------
+# multiplier applied to P(sign | disease) for signs of a given physiological group,
+# according to disease stage. Per disease the multipliers are re-normalised so the
+# stage-averaged probability equals the grade written in diseases.yaml.
+stages: [preclinical, early, advanced]
+default_stage_weights: {preclinical: 0.25, early: 0.35, advanced: 0.40}
+stage_group_multipliers:
+  left_congestion:  {preclinical: 0.03, early: 0.60, advanced: 1.60}
+  right_congestion: {preclinical: 0.03, early: 0.30, advanced: 1.80}
+  low_output:       {preclinical: 0.25, early: 0.70, advanced: 1.40}
+  rhythm:           {preclinical: 0.80, early: 1.00, advanced: 1.10}
+  constitutional:   {preclinical: 0.20, early: 0.60, advanced: 1.60}
+  structural:       {preclinical: 0.95, early: 1.00, advanced: 1.05}
+  systemic:         {preclinical: 1.00, early: 1.00, advanced: 1.00}
+  thrombo:          {preclinical: 0.30, early: 0.80, advanced: 1.30}
+  gi_esophageal:    {preclinical: 1.00, early: 1.00, advanced: 1.00}
+  neuro:            {preclinical: 0.50, early: 1.00, advanced: 1.20}
+  other:            {preclinical: 0.50, early: 1.00, advanced: 1.20}
+
+# --- decision thresholds ---------------------------------------------------------
+decision:
+  max_questions: 14            # hard stop for the adaptive interview
+  min_questions: 3             # do not offer a result before this many answers
+  min_adaptive_questions: 3    # ask at least this many differential questions before stopping early
+  stop_confidence: 0.85        # top-1 posterior (within cardiac diseases) needed to stop early
+  stop_margin: 0.35            # top-1 minus top-2
+  min_information_gain_bits: 0.03
+  bands:                       # displayed instead of a fake "percentage"
+    high: 0.60
+    moderate: 0.25
+    low: 0.08
+  cardiac_bands:               # P(cardiac cause) - displayed as qualitative statement
+    high: 0.80
+    moderate: 0.50
+    low: 0.20
+  engines_disagree_top1_overlap: 0.5   # min Jaccard overlap of the two top-3 lists to call them "in agreement"
+
+# --- ML model hyper-parameters -------------------------------------------------------
+ml:
+  samples_per_class: 2600
+  holdout_per_class: 400
+  hidden_layers: [192, 96]
+  max_iter: 60
+  seed: 20260715
+  # share of cases per audience in the simulated training data
+  audience_mix: {owner: 0.55, clinician: 0.45}
+  # how completely the interview is simulated (fraction of reachable signs that get an answer)
+  completeness_range: [0.12, 0.85]
+  # probability that a PRESENT sign is volunteered / answered (owners report positives first)
+  present_answered_prob: 0.85

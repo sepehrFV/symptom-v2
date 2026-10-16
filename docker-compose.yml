@@ -1,0 +1,92 @@
+#version: '3.8'
+
+services:
+
+#  frontend:
+#    build:
+#      context: ./frontend
+#      dockerfile: Dockerfile
+#    container_name: frontend
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - ./frontend:/app
+#      - /app/node_modules
+#    depends_on:
+#      api-gateway:
+#        condition: service_started
+#    networks:
+#      - core-network
+
+  # PostgreSQL with initialization scripts
+  symptom-db:
+    image: postgres:15
+    container_name: symptom-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: symptom
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SPRING_DATASOURCE_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - core-network
+
+  # AI Symptom Model
+  symptom-predictor:
+    build:
+      context: .
+      dockerfile: ./symptom-model/Dockerfile
+    container_name: symptom-model
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:5000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - core-network
+
+  # Symptom Core Service
+  symptom-service:
+    build:
+      context: .
+      dockerfile: ./symptom-service/Dockerfile
+    container_name: symptom-service
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://symptom-db:5432/symptom
+      PREDICTOR_URL: http://symptom-predictor:5000
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      DDL_AUTO: update            # creates the new diagnosis_case table
+    depends_on:
+      symptom-db:
+        condition: service_healthy
+      symptom-predictor:
+        condition: service_healthy
+    networks:
+      - core-network
+
+networks:
+  core-network:
+    driver: bridge
+
+volumes:
+  db_data:

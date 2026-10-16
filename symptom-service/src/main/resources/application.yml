@@ -1,0 +1,41 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: symptom_service
+
+  datasource:
+    url: ${DB_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/symptom}}
+    username: ${DB_USERNAME:${SPRING_DATASOURCE_USERNAME:postgres}}
+    password: ${DB_PASSWORD:${SPRING_DATASOURCE_PASSWORD:7808}}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
+    cache-names:
+      - diseases
+      - diseasesBySymptoms
+      - diseasesByNames
+      - diseasesByIds
+      - diseasesNamesBySymptoms
+
+logging:
+  level:
+    root: INFO
+    msfv.original: INFO
+
+
+predictor:
+  url: ${PREDICTOR_URL:http://localhost:5000}

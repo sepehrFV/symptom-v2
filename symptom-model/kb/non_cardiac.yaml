@@ -1,0 +1,177 @@
+# =============================================================================
+# NON-CARDIAC ("other cause") HYPOTHESIS
+# A pet that coughs, tires easily or is lethargic often does NOT have heart
+# disease. Without this competing hypothesis any pet with a couple of vague
+# signs would be forced into a cardiac diagnosis. It is modelled as a mixture of
+# common non-cardiac syndromes (weights are relative, per species).
+# Sign grades use the same A..G scale as diseases.yaml.
+# =============================================================================
+profiles:
+- id: airway_disease
+  name_en: Airway / upper-airway disease (tracheal collapse, chronic bronchitis, feline asthma, laryngeal paralysis, brachycephalic airway syndrome)
+  name_fa: "بیماری راه‌های هوایی (کلاپس نای، برونشیت مزمن، آسم گربه، فلج حنجره، سندرم راه هوایی براکی‌سفال)"
+  weight: {dog: 0.22, cat: 0.20}
+  age: {young: 0.6, adult: 1.0, senior: 1.3}
+  signs:
+    cough: B
+    dyspnea: D
+    tachypnea_resting: D
+    open_mouth_breathing: C
+    exercise_intolerance: C
+    lethargy: E
+    cyanosis: F
+    syncope: F
+    xray_bronchial_pattern: C
+- id: lower_respiratory
+  name_en: Pneumonia / pleural disease / lung neoplasia
+  name_fa: "پنومونی، بیماری پلور یا نئوپلازی ریه"
+  weight: {dog: 0.12, cat: 0.14}
+  age: {young: 1.6, adult: 0.9, senior: 1.1}
+  signs:
+    cough: C
+    dyspnea: C
+    tachypnea_resting: B
+    open_mouth_breathing: D
+    lethargy: B
+    decreased_appetite: B
+    fever: C
+    weight_loss: D
+    pleural_effusion: D
+    hemoptysis: F
+    cyanosis: E
+    xray_bronchial_pattern: D
+- id: gi_metabolic
+  name_en: Gastrointestinal / pancreatic / hepatic disease
+  name_fa: "بیماری‌های گوارشی، پانکراس یا کبد"
+  weight: {dog: 0.20, cat: 0.18}
+  age: {young: 2.0, adult: 1.0, senior: 0.8}
+  signs:
+    vomiting: B
+    decreased_appetite: B
+    lethargy: B
+    weight_loss: D
+    abdominal_distension: E
+    fever: E
+    pale_gums: E
+    dysphagia: F
+    regurgitation: E
+- id: renal_ckd
+  name_en: Chronic kidney disease / urinary disease
+  name_fa: "بیماری مزمن کلیه یا مجاری ادراری"
+  weight: {dog: 0.06, cat: 0.12}
+  age: {young: 0.1, adult: 0.5, senior: 2.4}
+  signs:
+    polyuria_polydipsia: A
+    weight_loss: C
+    lethargy: C
+    decreased_appetite: B
+    vomiting: C
+    weakness: D
+    hypertension_measured: D
+    azotemia: A
+    pale_gums: E
+    sudden_blindness: F
+    anemia: D
+- id: hyperthyroid_cat
+  name_en: Hyperthyroidism without significant cardiac disease (cats)
+  name_fa: "پرکاری تیروئید بدون درگیری قابل‌توجه قلب (گربه)"
+  weight: {dog: 0.0, cat: 0.12}
+  age: {young: 0.0, adult: 0.05, senior: 2.8}
+  signs:
+    weight_loss: A
+    polyphagia: B
+    tachycardia: B
+    polyuria_polydipsia: C
+    vomiting: C
+    restlessness: C
+    heart_murmur: D
+    murmur_left_apical_systolic: D
+    hypertension_measured: D
+    palpable_thyroid_nodule: B
+    high_total_t4: A
+    azotemia: D
+    decreased_appetite: E
+    lethargy: E
+- id: endocrine_dog
+  name_en: Endocrine disease (diabetes, Cushing's, hypothyroidism, Addison's)
+  name_fa: "بیماری غدد درون‌ریز (دیابت، کوشینگ، کم‌کاری تیروئید، آدیسون)"
+  weight: {dog: 0.08, cat: 0.03}
+  age: {young: 0.02, adult: 0.6, senior: 2.0}
+  signs:
+    polyuria_polydipsia: A
+    polyphagia: C
+    weight_loss: D
+    lethargy: C
+    weakness: C
+    decreased_appetite: D
+    vomiting: D
+    bradycardia: E
+    abdominal_distension: E
+    hypertension_measured: D
+    sudden_blindness: F
+    anemia: E
+    thromboembolic_risk: E
+- id: anemia_hemorrhage
+  name_en: Anemia / hemolysis / hemorrhage (incl. IMHA, toxins, neoplasia)
+  name_fa: "کم‌خونی، همولیز یا خونریزی"
+  weight: {dog: 0.06, cat: 0.05}
+  age: {young: 1.3, adult: 1.0, senior: 0.9}
+  signs:
+    pale_gums: A
+    lethargy: A
+    weakness: B
+    collapse: D
+    tachycardia: B
+    tachypnea_resting: C
+    heart_murmur: D
+    murmur_left_apical_systolic: E
+    bounding_pulse: D
+    exercise_intolerance: C
+    decreased_appetite: C
+    dark_urine: E
+    anemia: A
+    thromboembolic_risk: D
+- id: neuro_ortho
+  name_en: Neurological / orthopedic / pain (epilepsy, vestibular, IVDD, hypoglycemia)
+  name_fa: "بیماری عصبی، ارتوپدی یا درد (صرع، وستیبولار، دیسک ستون مهره، افت قند)"
+  weight: {dog: 0.10, cat: 0.07}
+  age: {young: 0.9, adult: 1.1, senior: 1.0}
+  signs:
+    seizure_like: C
+    collapse: D
+    weakness: D
+    lethargy: D
+    syncope: E
+    hind_limb_paralysis: E
+    painful_limbs: D
+    exercise_intolerance: D
+    decreased_appetite: E
+- id: metabolic_electrolyte
+  name_en: Electrolyte / Addisonian / urethral-obstruction crisis (hyperkalemia)
+  name_fa: "اختلالات الکترولیت، آدیسون یا انسداد مجاری ادراری (هیپرکالمی)"
+  weight: {dog: 0.03, cat: 0.05}
+  age: {young: 1.3, adult: 1.0, senior: 0.8}
+  signs:
+    weakness: A
+    lethargy: A
+    bradycardia: C
+    collapse: C
+    vomiting: C
+    decreased_appetite: B
+    polyuria_polydipsia: D
+    hyperkalemia: B
+    azotemia: B
+    ecg_atrial_standstill: E
+    weak_pulse: C
+- id: benign_incidental
+  name_en: Benign / incidental finding (innocent or flow murmur, anxiety, normal variant)
+  name_fa: "یافتهٔ خوش‌خیم یا اتفاقی (سوفل بی‌خطر/فیزیولوژیک، اضطراب، تغییر طبیعی)"
+  weight: {dog: 0.13, cat: 0.09}
+  age: {young: 3.0, adult: 0.7, senior: 0.2}
+  signs:
+    heart_murmur: D
+    murmur_left_basilar_systolic: D
+    lethargy: E
+    restlessness: E
+    tachycardia: D
+    exercise_intolerance: E

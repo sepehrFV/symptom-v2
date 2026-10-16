@@ -1,0 +1,1012 @@
+# =============================================================================
+# SIGN VOCABULARY  (single source of truth for questions shown to the user)
+#
+#   level  : owner   = something an owner can observe at home
+#            history = something an owner knows from earlier vet visits / history
+#            exam    = clinician physical-examination finding
+#            test    = result of a diagnostic test (ECG, radiographs, echo, lab)
+#   group  : physiological cluster; used by the case simulator to model disease
+#            stage (e.g. congestion signs appear only late) -> correlated signs
+#   leak   : P(sign reported | a cardiac disease that does NOT list this sign)
+#            i.e. the background rate; keeps the Bayesian engine from zeroing a
+#            disease because of a single unexpected finding.
+#   parent : "umbrella" sign. The parent is only used by the engine when none of
+#            its children has been answered (prevents double counting).
+#   codes  : legacy numeric codes of the old Java SymptomEnum (traceability only)
+#   red_flag: shown as a triage banner when the sign is answered "yes"
+# =============================================================================
+version: 2
+
+signs:
+  # ---------------------------------------------------------------- OWNER ----
+  - id: cough
+    codes: [9]
+    level: owner
+    group: left_congestion
+    leak: 0.04
+    en: "Cough"
+    fa: "سرفه"
+    ask_en: "Does the animal cough (especially at night, at rest, or after activity)?"
+    ask_fa: "آیا حیوان سرفه می‌کند؟ (به‌ویژه شب‌ها، هنگام استراحت یا بعد از فعالیت)"
+    hint_fa: "سرفه در سگ‌ها شایع‌تر است. در گربه‌ها سرفه ناشی از قلب نادر است و معمولاً به بیماری راه‌های هوایی (مثل آسم) مربوط می‌شود."
+
+  - id: dyspnea
+    codes: [14, 53]
+    level: owner
+    group: left_congestion
+    leak: 0.04
+    en: "Labored breathing (dyspnea)"
+    fa: "مشکل در تنفس"
+    ask_en: "At rest, does the animal breathe with visible effort (belly heaving, neck stretched, elbows out)?"
+    ask_fa: "آیا حیوان در حال استراحت با زحمت نفس می‌کشد؟ (حرکت شدید شکم، کشیدن گردن، دور کردن آرنج‌ها از بدن)"
+    red_flag:
+      urgency: emergency
+      fa: "تنگی نفس در حال استراحت یک وضعیت اورژانسی است. حیوان را بدون استرس و بلافاصله نزد دامپزشک ببرید."
+      en: "Labored breathing at rest is an emergency. Keep the animal calm and go to a veterinarian immediately."
+
+  - id: tachypnea_resting
+    codes: [15]
+    level: owner
+    group: left_congestion
+    leak: 0.05
+    en: "Fast resting/sleeping breathing rate"
+    fa: "تنفس سریع در حالت استراحت یا خواب"
+    ask_en: "Is the breathing rate while asleep or fully relaxed above 30 breaths per minute?"
+    ask_fa: "آیا تعداد تنفس حیوان در زمان خواب یا استراحت کامل بیش از ۳۰ بار در دقیقه است؟"
+    hint_fa: "وقتی حیوان آرام خوابیده، به‌مدت یک دقیقه تعداد بالا و پایین رفتن قفسه سینه را بشمارید. بیش از ۳۰ (و به‌ویژه بیش از ۴۰) غیرطبیعی است."
+
+  - id: orthopnea
+    codes: [58]
+    level: owner
+    group: left_congestion
+    leak: 0.01
+    en: "Refuses to lie down / sits upright to breathe"
+    fa: "امتناع از دراز کشیدن"
+    ask_en: "Does the animal refuse to lie down, or sit/stand with neck extended in order to breathe?"
+    ask_fa: "آیا حیوان از دراز کشیدن خودداری می‌کند یا برای نفس کشیدن می‌نشیند/می‌ایستد و گردنش را دراز می‌کند؟"
+    red_flag:
+      urgency: urgent
+      fa: "امتناع از دراز کشیدن به‌دلیل تنگی نفس نشانهٔ هشدار است؛ در اولین فرصت معاینهٔ دامپزشکی لازم است."
+      en: "Refusing to lie down because of breathing difficulty is a warning sign; veterinary examination is needed promptly."
+
+  - id: open_mouth_breathing
+    codes: [27]
+    level: owner
+    group: left_congestion
+    leak: 0.05
+    en: "Panting / open-mouth breathing at rest"
+    fa: "نفس‌نفس زدن یا تنفس با دهان باز در حال استراحت"
+    ask_en: "Does the animal pant or breathe with an open mouth while resting (not after exercise or heat)?"
+    ask_fa: "آیا حیوان در حال استراحت (نه بعد از فعالیت یا گرما) نفس‌نفس می‌زند یا با دهان باز نفس می‌کشد؟"
+    red_flag:
+      urgency: emergency
+      species: [cat]
+      fa: "تنفس با دهان باز در گربه اورژانسی است. بلافاصله به دامپزشک مراجعه کنید."
+      en: "Open-mouth breathing in a cat is an emergency. See a veterinarian immediately."
+
+  - id: hemoptysis
+    codes: [59]
+    level: owner
+    group: other
+    leak: 0.005
+    en: "Coughing up blood"
+    fa: "سرفهٔ خونی"
+    ask_en: "Has the animal coughed up blood or blood-tinged froth?"
+    ask_fa: "آیا حیوان خون یا کف صورتی‌رنگ سرفه کرده است؟"
+
+  - id: exercise_intolerance
+    codes: [32]
+    level: owner
+    group: low_output
+    leak: 0.08
+    en: "Exercise intolerance"
+    fa: "عدم تحمل فعالیت"
+    ask_en: "Does the animal tire sooner than before or avoid walks and play?"
+    ask_fa: "آیا حیوان نسبت به قبل زودتر خسته می‌شود یا از پیاده‌روی و بازی خودداری می‌کند؟"
+
+  - id: lethargy
+    codes: [13]
+    level: owner
+    group: constitutional
+    leak: 0.15
+    en: "Lethargy / reduced activity"
+    fa: "بی‌حالی و کم‌تحرکی"
+    ask_en: "Is the animal unusually quiet, sleepy or less active than normal?"
+    ask_fa: "آیا حیوان به‌طور غیرعادی کم‌تحرک، خواب‌آلود یا بی‌حال است؟"
+
+  - id: weakness
+    codes: [10, 36]
+    level: owner
+    group: low_output
+    leak: 0.10
+    en: "Generalised weakness"
+    fa: "ضعف عمومی"
+    ask_en: "Is the animal weak or wobbly (legs giving way, difficulty rising)?"
+    ask_fa: "آیا حیوان ضعیف یا ناپایدار است؟ (خم شدن پاها، دشواری در بلند شدن)"
+
+  - id: syncope
+    codes: [42]
+    level: owner
+    group: rhythm
+    leak: 0.02
+    en: "Fainting (syncope)"
+    fa: "غش"
+    ask_en: "Has the animal had episodes of sudden, brief loss of consciousness with spontaneous full recovery?"
+    ask_fa: "آیا حیوان دچار دوره‌هایی از از دست رفتن ناگهانی و کوتاه‌مدت هوشیاری شده که خودبه‌خود و کامل بهبود می‌یابد؟"
+    hint_fa: "غش اغلب هنگام هیجان یا فعالیت رخ می‌دهد و با تشنج متفاوت است (معمولاً بدون تشنج طولانی، کف دهان یا ادرار و مدفوع غیرارادی)."
+    red_flag:
+      urgency: urgent
+      fa: "غش می‌تواند نشانهٔ اختلال ریتم یا بیماری جدی قلبی باشد؛ معاینهٔ قلبی در اسرع وقت لازم است."
+      en: "Fainting can indicate a serious rhythm or heart problem; cardiac assessment is needed soon."
+
+  - id: collapse
+    codes: [43]
+    level: owner
+    group: low_output
+    leak: 0.03
+    en: "Collapse (sudden inability to stand)"
+    fa: "افتادن ناگهانی (ناتوانی در ایستادن)"
+    ask_en: "Has the animal suddenly collapsed and been unable to stand (with or without losing consciousness)?"
+    ask_fa: "آیا حیوان ناگهان افتاده و نتوانسته بایستد؟ (با یا بدون از دست دادن هوشیاری)"
+    red_flag:
+      urgency: emergency
+      fa: "کولاپس ناگهانی اورژانسی است؛ فوراً به نزدیک‌ترین مرکز دامپزشکی مراجعه کنید."
+      en: "Sudden collapse is an emergency; go to the nearest veterinary clinic immediately."
+
+  - id: seizure_like
+    codes: [1]
+    level: owner
+    group: neuro
+    leak: 0.02
+    en: "Seizure-like episodes"
+    fa: "حمله‌های تشنج‌مانند"
+    ask_en: "Has the animal had seizure-like episodes (stiffening, paddling, prolonged unresponsiveness)?"
+    ask_fa: "آیا حیوان حمله‌های تشنج‌مانند داشته است؟ (سفت شدن بدن، حرکات پارویی، پاسخ‌ندادن طولانی)"
+
+  - id: pale_gums
+    codes: [8, 63]
+    level: owner
+    group: low_output
+    leak: 0.05
+    en: "Pale gums"
+    fa: "رنگ‌پریدگی لثه"
+    ask_en: "Are the gums pale pink or white?"
+    ask_fa: "آیا لثه‌ها کم‌رنگ (صورتی روشن یا سفید) هستند؟"
+
+  - id: cyanosis
+    codes: [48]
+    level: owner
+    group: other
+    leak: 0.01
+    en: "Blue/purple gums or tongue (cyanosis)"
+    fa: "کبودی یا آبی‌شدن لثه و زبان"
+    ask_en: "Are the gums or tongue blue or purple?"
+    ask_fa: "آیا لثه یا زبان آبی یا بنفش شده است؟"
+    red_flag:
+      urgency: emergency
+      fa: "کبودی لثه و زبان نشانهٔ کمبود شدید اکسیژن است و اورژانسی است."
+      en: "Blue gums or tongue indicate severe oxygen deficiency and are an emergency."
+
+  - id: cold_extremities
+    codes: [22]
+    level: owner
+    group: thrombo
+    leak: 0.03
+    en: "Cold paws / extremities"
+    fa: "سردی پنجه‌ها و اندام‌ها"
+    ask_en: "Do the paws or limbs feel unusually cold?"
+    ask_fa: "آیا پنجه‌ها یا اندام‌ها به‌طور غیرعادی سرد هستند؟"
+
+  - id: abdominal_distension
+    codes: [11]
+    level: owner
+    group: right_congestion
+    leak: 0.03
+    en: "Swollen abdomen (ascites)"
+    fa: "بزرگ شدن شکم (آسیت)"
+    ask_en: "Has the abdomen become swollen or fluid-filled (while the animal is losing muscle)?"
+    ask_fa: "آیا شکم حیوان متورم یا پر از مایع شده است؟ (گاهی همراه با لاغری عضلات)"
+
+  - id: limb_edema
+    codes: [41, 68]
+    level: owner
+    group: right_congestion
+    leak: 0.01
+    en: "Swollen limbs (edema)"
+    fa: "ورم اندام‌ها"
+    ask_en: "Are the limbs swollen (pitting edema)?"
+    ask_fa: "آیا اندام‌ها ورم کرده‌اند؟"
+
+  - id: decreased_appetite
+    codes: [31, 35]
+    level: owner
+    group: constitutional
+    leak: 0.12
+    en: "Decreased appetite"
+    fa: "کاهش اشتها"
+    ask_en: "Has the appetite decreased?"
+    ask_fa: "آیا اشتهای حیوان کم شده است؟"
+
+  - id: weight_loss
+    codes: [2]
+    level: owner
+    group: constitutional
+    leak: 0.08
+    en: "Weight / muscle loss"
+    fa: "کاهش وزن یا لاغری عضلانی"
+    ask_en: "Has the animal lost weight or muscle mass?"
+    ask_fa: "آیا حیوان وزن یا توده عضلانی از دست داده است؟"
+
+  - id: vomiting
+    codes: [24]
+    level: owner
+    group: constitutional
+    leak: 0.06
+    en: "Vomiting"
+    fa: "استفراغ"
+    ask_en: "Is the animal vomiting?"
+    ask_fa: "آیا حیوان استفراغ می‌کند؟"
+
+  - id: regurgitation
+    codes: [38]
+    level: owner
+    group: gi_esophageal
+    leak: 0.01
+    en: "Regurgitation"
+    fa: "برگشت غذای هضم‌نشده"
+    ask_en: "Does undigested food come back up effortlessly (without retching), especially after meals?"
+    ask_fa: "آیا غذای هضم‌نشده بدون زور زدن و عق زدن (به‌ویژه بعد از غذا) برمی‌گردد؟"
+
+  - id: dysphagia
+    codes: [34, 56]
+    level: owner
+    group: gi_esophageal
+    leak: 0.01
+    en: "Difficulty swallowing"
+    fa: "مشکل در بلع"
+    ask_en: "Does the animal have difficulty swallowing?"
+    ask_fa: "آیا حیوان در بلع غذا یا آب مشکل دارد؟"
+
+  - id: polyuria_polydipsia
+    codes: [5, 50]
+    level: owner
+    group: systemic
+    leak: 0.04
+    en: "Increased drinking and urination"
+    fa: "افزایش نوشیدن آب و ادرار"
+    ask_en: "Is the animal drinking and urinating much more than before? (Tell us if this started only after diuretic treatment.)"
+    ask_fa: "آیا حیوان بسیار بیشتر از قبل آب می‌نوشد و ادرار می‌کند؟ (اگر فقط پس از شروع داروی ادرارآور بوده، توضیح دهید.)"
+
+  - id: polyphagia
+    codes: [29]
+    level: owner
+    group: systemic
+    leak: 0.02
+    en: "Increased appetite"
+    fa: "افزایش اشتها"
+    ask_en: "Is the appetite increased (ravenous) despite weight loss?"
+    ask_fa: "آیا اشتهای حیوان با وجود کاهش وزن زیاد شده است؟"
+
+  - id: hind_limb_paralysis
+    codes: [28, 52, 61]
+    level: owner
+    group: thrombo
+    leak: 0.005
+    en: "Sudden hind-limb paralysis"
+    fa: "فلج ناگهانی اندام‌های عقبی"
+    ask_en: "Did the hind limbs suddenly become paralysed or unable to bear weight?"
+    ask_fa: "آیا اندام‌های عقبی ناگهان فلج شده یا حیوان نمی‌تواند روی آن‌ها بایستد؟"
+    red_flag:
+      urgency: emergency
+      fa: "فلج ناگهانی اندام عقبی (به‌ویژه در گربه) می‌تواند نشانهٔ لختهٔ شریانی باشد و اورژانسی است."
+      en: "Sudden hind-limb paralysis (especially in cats) can indicate an arterial clot and is an emergency."
+
+  - id: painful_limbs
+    codes: [45, 39]
+    level: owner
+    group: thrombo
+    leak: 0.01
+    en: "Severe limb pain / crying out"
+    fa: "درد شدید اندام و ناله"
+    ask_en: "Is there sudden severe limb pain with crying or vocalising?"
+    ask_fa: "آیا درد شدید ناگهانی در اندام‌ها همراه با ناله و فریاد وجود دارد؟"
+
+  - id: sudden_blindness
+    codes: [30]
+    level: owner
+    group: systemic
+    leak: 0.005
+    en: "Sudden blindness / dilated pupils"
+    fa: "کوری ناگهانی یا مردمک‌های گشاد"
+    ask_en: "Did the animal suddenly go blind, bump into objects, or have widely dilated pupils?"
+    ask_fa: "آیا حیوان ناگهان بینایی‌اش را از دست داده، به اشیا می‌خورد یا مردمک‌هایش بسیار گشاد است؟"
+
+  - id: dark_urine
+    codes: [60]
+    level: owner
+    group: other
+    leak: 0.005
+    en: "Dark red/brown urine"
+    fa: "ادرار قرمز تیره یا قهوه‌ای"
+    ask_en: "Is the urine dark red or coffee-coloured?"
+    ask_fa: "آیا ادرار قرمز تیره یا قهوه‌ای است؟"
+
+  - id: failure_to_thrive
+    codes: [55]
+    level: owner
+    group: constitutional
+    leak: 0.01
+    en: "Poor growth (young animals)"
+    fa: "رشد ضعیف (در حیوانات جوان)"
+    ask_en: "(Young animals) Is the animal smaller or slower-growing than littermates?"
+    ask_fa: "(در حیوانات جوان) آیا حیوان از هم‌کوری‌هایش کوچک‌تر است یا کندتر رشد می‌کند؟"
+
+  - id: restlessness
+    codes: [7, 64]
+    level: owner
+    group: left_congestion
+    leak: 0.04
+    en: "Restlessness, especially at night"
+    fa: "بی‌قراری به‌ویژه شب‌ها"
+    ask_en: "Is the animal restless at night, unable to settle or find a comfortable position?"
+    ask_fa: "آیا حیوان شب‌ها بی‌قرار است و نمی‌تواند آرام بگیرد یا وضعیت راحتی پیدا کند؟"
+
+  # -------------------------------------------------------------- HISTORY ----
+  - id: heart_murmur
+    codes: [18]
+    level: history
+    group: structural
+    leak: 0.04
+    en: "Heart murmur"
+    fa: "سوفل قلبی"
+    ask_en: "Has a veterinarian ever told you the animal has a heart murmur?"
+    ask_fa: "آیا دامپزشک تا به حال به شما گفته که حیوان سوفل (صدای اضافه) قلبی دارد؟"
+    ask_clinician_en: "Is a heart murmur present on auscultation?"
+    ask_clinician_fa: "آیا در سمع قلب سوفل شنیده می‌شود؟"
+
+  - id: heartworm_exposure
+    codes: []
+    level: history
+    group: systemic
+    leak: 0.04
+    en: "Heartworm exposure (endemic area without prevention, or positive test)"
+    fa: "مواجهه با کرم قلب"
+    ask_en: "Does the animal live in or travel to a heartworm-endemic (mosquito) area without regular preventive treatment, or has it tested positive?"
+    ask_fa: "آیا حیوان در منطقهٔ آلوده به کرم قلب (دیروفیلاریا؛ مناطق گرم و مرطوب با پشه) زندگی می‌کند یا سفر کرده و پیشگیری منظم نداشته است؟ یا تست مثبت داشته است؟"
+
+  - id: family_history_cardiac
+    codes: []
+    level: history
+    group: structural
+    leak: 0.05
+    en: "Family history of heart disease / sudden death"
+    fa: "سابقهٔ خانوادگی بیماری قلبی"
+    ask_en: "Is there a known family history of heart disease or sudden death (parents, siblings, same lineage)?"
+    ask_fa: "آیا سابقهٔ بیماری قلبی یا مرگ ناگهانی در والدین، هم‌کوری‌ها یا همان خط خونی شناخته شده است؟"
+
+  - id: thromboembolic_risk
+    codes: []
+    level: history
+    group: systemic
+    leak: 0.03
+    en: "Thrombosis-predisposing condition"
+    fa: "بیماری زمینه‌ای مستعدکنندهٔ لخته"
+    ask_en: "Does the animal have a clot-predisposing condition (IMHA, protein-losing kidney/gut disease, Cushing's, cancer, sepsis, recent major surgery or immobility)?"
+    ask_fa: "آیا بیماری زمینه‌ای مستعدکنندهٔ لخته دارد؟ (کم‌خونی همولیتیک ایمنی، دفع پروتئین از کلیه یا روده، کوشینگ، سرطان، سپسیس، جراحی بزرگ یا بی‌حرکتی اخیر)"
+
+  - id: predisposing_infection
+    codes: []
+    level: history
+    group: systemic
+    leak: 0.04
+    en: "Recent source of infection (dental, skin, urinary, discospondylitis)"
+    fa: "کانون عفونی اخیر"
+    ask_en: "Recent or ongoing infection source (dental disease, skin/wound infection, urinary tract infection, back pain/discospondylitis)?"
+    ask_fa: "آیا کانون عفونی اخیر یا مداوم وجود دارد؟ (بیماری دندان، عفونت پوست یا زخم، عفونت ادراری، درد ستون مهره)"
+
+  # ----------------------------------------------------------------- EXAM ----
+  - id: murmur_left_apical_systolic
+    codes: []
+    level: exam
+    group: structural
+    parent: heart_murmur
+    leak: 0.02
+    en: "Systolic murmur, left apex (mitral area)"
+    fa: "سوفل سیستولیک آپکس چپ (ناحیهٔ میترال)"
+    ask_en: "Systolic murmur loudest at the left apex (mitral area)?"
+    ask_fa: "آیا سوفل سیستولیک با بیشترین شدت در آپکس چپ (ناحیهٔ میترال) شنیده می‌شود؟"
+
+  - id: murmur_left_basilar_systolic
+    codes: []
+    level: exam
+    group: structural
+    parent: heart_murmur
+    leak: 0.02
+    en: "Systolic ejection murmur, left base (aortic/pulmonic area)"
+    fa: "سوفل سیستولیک قاعدهٔ قلب سمت چپ (ناحیهٔ آئورت/ریوی)"
+    ask_en: "Systolic ejection murmur loudest at the left heart base (aortic/pulmonic area)?"
+    ask_fa: "آیا سوفل سیستولیک (جهشی) با بیشترین شدت در قاعدهٔ چپ قلب (ناحیهٔ آئورت/ریوی) شنیده می‌شود؟"
+
+  - id: murmur_right_systolic
+    codes: []
+    level: exam
+    group: structural
+    parent: heart_murmur
+    leak: 0.01
+    en: "Systolic murmur, right side (tricuspid area)"
+    fa: "سوفل سیستولیک سمت راست (ناحیهٔ تری‌کاسپید)"
+    ask_en: "Systolic murmur loudest on the right hemithorax (tricuspid area)?"
+    ask_fa: "آیا سوفل سیستولیک با بیشترین شدت در سمت راست قفسه سینه (ناحیهٔ تری‌کاسپید) شنیده می‌شود؟"
+
+  - id: murmur_continuous
+    codes: []
+    level: exam
+    group: structural
+    parent: heart_murmur
+    leak: 0.003
+    en: "Continuous (\"machinery\") murmur, left base"
+    fa: "سوفل پیوسته (ماشینی) قاعدهٔ چپ"
+    ask_en: "Continuous (machinery) murmur at the left heart base?"
+    ask_fa: "آیا سوفل پیوستهٔ ماشینی (سیستولیک-دیاستولیک) در قاعدهٔ چپ قلب شنیده می‌شود؟"
+
+  - id: gallop_rhythm
+    codes: []
+    level: exam
+    group: structural
+    leak: 0.02
+    en: "Gallop rhythm (S3/S4)"
+    fa: "ریتم گالوپ (S3/S4)"
+    ask_en: "Gallop rhythm (S3 or S4) on auscultation?"
+    ask_fa: "آیا در سمع، ریتم گالوپ (S3 یا S4) شنیده می‌شود؟"
+
+  - id: muffled_heart_sounds
+    codes: [19]
+    level: exam
+    group: structural
+    leak: 0.02
+    en: "Muffled heart sounds"
+    fa: "صداهای قلبی خفه"
+    ask_en: "Muffled (distant) heart sounds?"
+    ask_fa: "آیا صداهای قلبی خفه (دور) هستند؟"
+
+  - id: irregular_rhythm
+    codes: [33, 51]
+    level: exam
+    group: rhythm
+    leak: 0.05
+    en: "Irregular heart rhythm"
+    fa: "ریتم نامنظم قلب"
+    ask_en: "Irregular rhythm on auscultation or pulse palpation?"
+    ask_fa: "آیا ریتم قلب در سمع یا لمس نبض نامنظم است؟"
+
+  - id: tachycardia
+    codes: [40]
+    level: exam
+    group: rhythm
+    leak: 0.12
+    en: "Tachycardia"
+    fa: "ضربان قلب سریع"
+    ask_en: "Heart rate persistently elevated for the species and state (dog >160, cat >220 bpm at rest)?"
+    ask_fa: "آیا ضربان قلب در حال استراحت بالاتر از حد طبیعی است؟ (سگ بیش از ۱۶۰، گربه بیش از ۲۲۰ در دقیقه)"
+
+  - id: bradycardia
+    codes: [46]
+    level: exam
+    group: rhythm
+    leak: 0.03
+    en: "Bradycardia"
+    fa: "ضربان قلب آهسته"
+    ask_en: "Heart rate abnormally slow (dog <60, cat <120 bpm) without athletic fitness or sedation?"
+    ask_fa: "آیا ضربان قلب غیرطبیعی کند است؟ (سگ کمتر از ۶۰، گربه کمتر از ۱۲۰ در دقیقه، بدون آمادگی ورزشی یا آرام‌بخش)"
+
+  - id: weak_pulse
+    codes: [26, 23]
+    level: exam
+    group: low_output
+    leak: 0.04
+    en: "Weak or deficient pulses"
+    fa: "نبض ضعیف یا کمبود نبض"
+    ask_en: "Weak femoral pulses or pulse deficits?"
+    ask_fa: "آیا نبض فمورال ضعیف است یا کمبود نبض وجود دارد؟"
+
+  - id: bounding_pulse
+    codes: []
+    level: exam
+    group: structural
+    leak: 0.02
+    en: "Bounding (hyperdynamic) pulses"
+    fa: "نبض جهنده (هایپردینامیک)"
+    ask_en: "Bounding / water-hammer femoral pulses?"
+    ask_fa: "آیا نبض فمورال جهنده و قوی (ضربه‌ای) است؟"
+
+  - id: absent_femoral_pulse
+    codes: [44]
+    level: exam
+    group: thrombo
+    leak: 0.003
+    en: "Absent femoral pulse(s)"
+    fa: "نبود نبض فمورال"
+    ask_en: "Absent or markedly reduced femoral pulse in one or both hind limbs?"
+    ask_fa: "آیا نبض فمورال در یک یا هر دو اندام عقبی وجود ندارد یا به‌شدت کاهش یافته است؟"
+
+  - id: jugular_distension
+    codes: [3]
+    level: exam
+    group: right_congestion
+    leak: 0.02
+    en: "Jugular distension / pulsation"
+    fa: "اتساع یا نبض ورید ژوگولار"
+    ask_en: "Jugular vein distension or abnormal pulsation (above the thoracic inlet, animal standing)?"
+    ask_fa: "آیا اتساع یا نبض غیرطبیعی ورید ژوگولار دیده می‌شود؟ (حیوان ایستاده)"
+
+  - id: lung_crackles
+    codes: []
+    level: exam
+    group: left_congestion
+    leak: 0.03
+    en: "Pulmonary crackles"
+    fa: "کراکل ریوی"
+    ask_en: "Crackles on thoracic auscultation?"
+    ask_fa: "آیا در سمع ریه‌ها کراکل شنیده می‌شود؟"
+
+  - id: pleural_effusion
+    codes: [67]
+    level: exam
+    group: right_congestion
+    leak: 0.02
+    en: "Pleural effusion (muffled ventral lung sounds / confirmed)"
+    fa: "افیوژن پلور"
+    ask_en: "Pleural effusion (muffled ventral lung sounds, confirmed by ultrasound or radiographs)?"
+    ask_fa: "آیا افیوژن پلور وجود دارد؟ (خفگی صداهای ریوی در قسمت شکمی قفسه سینه؛ یا تأیید با سونوگرافی/رادیوگرافی)"
+
+  - id: fever
+    codes: [17]
+    level: exam
+    group: systemic
+    leak: 0.05
+    en: "Fever"
+    fa: "تب"
+    ask_en: "Rectal temperature >39.5 °C (dog) / >39.7 °C (cat)?"
+    ask_fa: "آیا دمای رکتال بالاتر از ۳۹٫۵ (سگ) یا ۳۹٫۷ (گربه) درجه سانتی‌گراد است؟"
+
+  - id: retinal_lesions
+    codes: []
+    level: exam
+    group: systemic
+    leak: 0.005
+    en: "Retinal hemorrhage / detachment"
+    fa: "خونریزی یا جداشدگی شبکیه"
+    ask_en: "Retinal hemorrhage, edema or detachment on fundic examination?"
+    ask_fa: "آیا در معاینهٔ ته چشم خونریزی، ادم یا جداشدگی شبکیه دیده می‌شود؟"
+
+  - id: palpable_thyroid_nodule
+    codes: []
+    level: exam
+    group: systemic
+    leak: 0.01
+    en: "Palpable thyroid nodule (cat)"
+    fa: "ندول تیروئید قابل لمس (گربه)"
+    ask_en: "Palpable thyroid nodule in the neck (cats)?"
+    ask_fa: "(در گربه) آیا گرهٔ قابل لمس تیروئید در گردن وجود دارد؟"
+
+  # ----------------------------------------------------------------- TEST ----
+  - id: ecg_ventricular_arrhythmia
+    codes: [57]
+    level: test
+    group: rhythm
+    leak: 0.04
+    en: "ECG - ventricular premature complexes / ventricular tachycardia"
+    fa: "ECG - انقباض‌های زودرس بطنی یا تاکی‌کاردی بطنی"
+    ask_en: "ECG (or Holter) shows ventricular premature complexes or ventricular tachycardia?"
+    ask_fa: "آیا در نوار قلب (یا هولتر) انقباض‌های زودرس بطنی یا تاکی‌کاردی بطنی دیده می‌شود؟"
+
+  - id: ecg_atrial_fibrillation
+    codes: []
+    level: test
+    group: rhythm
+    leak: 0.01
+    en: "ECG - atrial fibrillation"
+    fa: "ECG - فیبریلاسیون دهلیزی"
+    ask_en: "ECG shows atrial fibrillation (no P waves, irregularly irregular rapid R-R)?"
+    ask_fa: "آیا نوار قلب فیبریلاسیون دهلیزی نشان می‌دهد؟ (نبود موج P، فواصل R-R کاملاً نامنظم و سریع)"
+
+  - id: ecg_supraventricular_tachycardia
+    codes: []
+    level: test
+    group: rhythm
+    leak: 0.005
+    en: "ECG - supraventricular tachycardia"
+    fa: "ECG - تاکی‌کاردی فوق‌بطنی"
+    ask_en: "ECG shows regular narrow-complex supraventricular tachycardia?"
+    ask_fa: "آیا نوار قلب تاکی‌کاردی منظم با کمپلکس باریک (فوق‌بطنی) نشان می‌دهد؟"
+
+  - id: ecg_high_grade_av_block
+    codes: []
+    level: test
+    group: rhythm
+    leak: 0.005
+    en: "ECG - high-grade 2nd/3rd-degree AV block"
+    fa: "ECG - بلوک دهلیزی-بطنی درجه بالا"
+    ask_en: "ECG shows high-grade second- or third-degree AV block?"
+    ask_fa: "آیا نوار قلب بلوک دهلیزی-بطنی درجه ۲ پیشرفته یا درجه ۳ نشان می‌دهد؟"
+
+  - id: ecg_sinus_pauses
+    codes: []
+    level: test
+    group: rhythm
+    leak: 0.01
+    en: "ECG - sinus arrest / pauses / brady-tachy pattern"
+    fa: "ECG - ایست سینوسی یا الگوی برادی-تاکی"
+    ask_en: "ECG shows sinus arrest/pauses (>3 s) or a bradycardia-tachycardia pattern?"
+    ask_fa: "آیا نوار قلب ایست سینوسی (مکث بیش از ۳ ثانیه) یا الگوی برادی-تاکی نشان می‌دهد؟"
+
+  - id: ecg_atrial_standstill
+    codes: []
+    level: test
+    group: rhythm
+    leak: 0.003
+    en: "ECG - atrial standstill (no P waves, slow regular rhythm)"
+    fa: "ECG - ایست دهلیزی"
+    ask_en: "ECG shows absent P waves with a slow regular (junctional/ventricular) rhythm?"
+    ask_fa: "آیا نوار قلب نبود موج P با ریتم کند و منظم نشان می‌دهد؟"
+
+  - id: ecg_low_voltage_alternans
+    codes: []
+    level: test
+    group: structural
+    leak: 0.02
+    en: "ECG - low voltage / electrical alternans"
+    fa: "ECG - ولتاژ پایین یا آلترنانس الکتریکی"
+    ask_en: "ECG shows low QRS voltage or electrical alternans?"
+    ask_fa: "آیا نوار قلب ولتاژ پایین QRS یا آلترنانس الکتریکی نشان می‌دهد؟"
+
+  - id: xray_generalized_cardiomegaly
+    codes: []
+    level: test
+    group: structural
+    leak: 0.08
+    en: "Radiograph - generalized cardiomegaly (VHS above normal)"
+    fa: "رادیوگرافی - بزرگی عمومی قلب"
+    ask_en: "Thoracic radiographs: generalized cardiomegaly (VHS dog >10.5 v, cat >8 v)?"
+    ask_fa: "آیا رادیوگرافی قفسه سینه بزرگی عمومی قلب نشان می‌دهد؟ (VHS سگ بیش از ۱۰٫۵، گربه بیش از ۸ مهره)"
+
+  - id: xray_left_atrial_enlargement
+    codes: []
+    level: test
+    group: structural
+    leak: 0.03
+    en: "Radiograph - left atrial enlargement"
+    fa: "رادیوگرافی - بزرگی دهلیز چپ"
+    ask_en: "Thoracic radiographs: left atrial enlargement?"
+    ask_fa: "آیا رادیوگرافی بزرگی دهلیز چپ را نشان می‌دهد؟"
+
+  - id: xray_rv_enlargement
+    codes: []
+    level: test
+    group: structural
+    leak: 0.02
+    en: "Radiograph - right heart enlargement (reverse-D)"
+    fa: "رادیوگرافی - بزرگی قلب راست"
+    ask_en: "Thoracic radiographs: right-sided cardiac enlargement (reverse-D shape)?"
+    ask_fa: "آیا رادیوگرافی بزرگی سمت راست قلب را نشان می‌دهد؟ (شکل D معکوس)"
+
+  - id: xray_globoid_heart
+    codes: []
+    level: test
+    group: structural
+    leak: 0.005
+    en: "Radiograph - globoid cardiac silhouette"
+    fa: "رادیوگرافی - سایه قلب گلوله‌ای"
+    ask_en: "Thoracic radiographs: large globoid (\"basketball\") cardiac silhouette?"
+    ask_fa: "آیا رادیوگرافی سایهٔ قلبی بزرگ و گرد (شبیه توپ بسکتبال) نشان می‌دهد؟"
+
+  - id: xray_pulmonary_edema
+    codes: []
+    level: test
+    group: left_congestion
+    leak: 0.02
+    en: "Radiograph - cardiogenic-pattern pulmonary edema"
+    fa: "رادیوگرافی - ادم ریوی"
+    ask_en: "Thoracic radiographs: pulmonary edema (perihilar / caudodorsal alveolar pattern)?"
+    ask_fa: "آیا رادیوگرافی ادم ریوی را نشان می‌دهد؟ (الگوی آلوئولی اطراف ناف ریه یا دمی-پشتی)"
+
+  - id: xray_enlarged_pulmonary_arteries
+    codes: []
+    level: test
+    group: structural
+    leak: 0.005
+    en: "Radiograph - enlarged/tortuous pulmonary arteries"
+    fa: "رادیوگرافی - بزرگی یا پیچ‌خوردگی شریان‌های ریوی"
+    ask_en: "Thoracic radiographs: enlarged, tortuous or truncated pulmonary arteries?"
+    ask_fa: "آیا رادیوگرافی بزرگی، پیچ‌خوردگی یا قطع‌شدگی انتهایی شریان‌های ریوی را نشان می‌دهد؟"
+
+  - id: xray_bronchial_pattern
+    codes: [65]
+    level: test
+    group: other
+    leak: 0.02
+    en: "Radiograph - bronchial / airway pattern"
+    fa: "رادیوگرافی - الگوی برونشیال"
+    ask_en: "Thoracic radiographs: diffuse bronchial pattern or tracheal collapse (primary airway disease)?"
+    ask_fa: "آیا رادیوگرافی الگوی برونشیال منتشر یا کلاپس نای (بیماری اولیهٔ راه‌های هوایی) را نشان می‌دهد؟"
+
+  - id: echo_lv_hypertrophy
+    codes: []
+    level: test
+    group: structural
+    leak: 0.03
+    en: "Echo - LV wall thickening (hypertrophy)"
+    fa: "اکو - ضخیم شدن دیوارهٔ بطن چپ"
+    ask_en: "Echocardiography: concentric LV wall thickening (diastolic wall >6 mm cat / breed-adjusted dog)?"
+    ask_fa: "آیا در اکوکاردیوگرافی ضخیم شدن دیوارهٔ بطن چپ (هیپرتروفی) دیده می‌شود؟"
+
+  - id: echo_lv_dilation_low_fs
+    codes: []
+    level: test
+    group: structural
+    leak: 0.02
+    en: "Echo - dilated LV with reduced systolic function"
+    fa: "اکو - اتساع بطن چپ با کاهش عملکرد سیستولیک"
+    ask_en: "Echocardiography: dilated left ventricle with reduced fractional shortening?"
+    ask_fa: "آیا در اکو، اتساع بطن چپ همراه با کاهش کسر کوتاه‌شدگی (FS) دیده می‌شود؟"
+
+  - id: echo_la_enlargement
+    codes: []
+    level: test
+    group: structural
+    leak: 0.05
+    en: "Echo - left atrial enlargement (LA:Ao increased)"
+    fa: "اکو - بزرگی دهلیز چپ"
+    ask_en: "Echocardiography: left atrial enlargement (LA:Ao >1.6 dog; LA >16 mm cat)?"
+    ask_fa: "آیا در اکو بزرگی دهلیز چپ دیده می‌شود؟ (LA:Ao بیش از ۱٫۶ در سگ)"
+
+  - id: echo_mitral_valve_lesion
+    codes: []
+    level: test
+    group: structural
+    leak: 0.02
+    en: "Echo - mitral valve thickening / prolapse / dysplasia with regurgitation"
+    fa: "اکو - ضایعهٔ دریچهٔ میترال با نارسایی"
+    ask_en: "Echocardiography: thickened / prolapsing / dysplastic mitral valve with regurgitant jet?"
+    ask_fa: "آیا در اکو دریچهٔ میترال ضخیم، پرولاپس یا دیسپلاستیک با جت نارسایی دیده می‌شود؟"
+
+  - id: echo_rv_pressure_overload
+    codes: []
+    level: test
+    group: structural
+    leak: 0.02
+    en: "Echo - RV hypertrophy / dilation, septal flattening"
+    fa: "اکو - هیپرتروفی یا اتساع بطن راست و تخت شدن سپتوم"
+    ask_en: "Echocardiography: RV concentric hypertrophy or dilation with septal flattening (pressure overload)?"
+    ask_fa: "آیا در اکو هیپرتروفی یا اتساع بطن راست با تخت شدن سپتوم (فشار اضافه) دیده می‌شود؟"
+
+  - id: echo_pulmonic_obstruction
+    codes: []
+    level: test
+    group: structural
+    leak: 0.003
+    en: "Echo - pulmonic outflow obstruction (high gradient)"
+    fa: "اکو - انسداد خروجی ریوی"
+    ask_en: "Doppler: pulmonic outflow obstruction with high velocity (>2.5 m/s)?"
+    ask_fa: "آیا در داپلر انسداد مسیر خروجی ریوی با سرعت بالا (بیش از ۲٫۵ متر بر ثانیه) دیده می‌شود؟"
+
+  - id: echo_subaortic_obstruction
+    codes: []
+    level: test
+    group: structural
+    leak: 0.003
+    en: "Echo - subvalvular / valvular aortic outflow obstruction"
+    fa: "اکو - انسداد خروجی آئورت"
+    ask_en: "Doppler: aortic outflow obstruction (subvalvular ridge / high velocity)?"
+    ask_fa: "آیا در داپلر انسداد مسیر خروجی آئورت (حلقه زیر دریچه‌ای یا سرعت بالا) دیده می‌شود؟"
+
+  - id: echo_ductal_flow
+    codes: []
+    level: test
+    group: structural
+    leak: 0.001
+    en: "Echo - continuous retrograde flow in pulmonary artery (PDA)"
+    fa: "اکو - جریان پیوستهٔ ductal در شریان ریوی"
+    ask_en: "Doppler: continuous flow entering the main pulmonary artery from a ductus?"
+    ask_fa: "آیا در داپلر جریان پیوسته از مجرای شریانی به شریان ریوی اصلی دیده می‌شود؟"
+
+  - id: echo_septal_defect
+    codes: []
+    level: test
+    group: structural
+    leak: 0.002
+    en: "Echo - ventricular or atrial septal defect with shunt flow"
+    fa: "اکو - نقص دیوارهٔ بطنی یا دهلیزی با جریان شانت"
+    ask_en: "Echocardiography: ventricular or atrial septal defect with shunt flow?"
+    ask_fa: "آیا در اکو نقص دیوارهٔ بین‌بطنی یا بین‌دهلیزی با جریان شانت دیده می‌شود؟"
+
+  - id: echo_right_to_left_shunt
+    codes: []
+    level: test
+    group: structural
+    leak: 0.001
+    en: "Echo - right-to-left shunting (bubble study / Doppler)"
+    fa: "اکو - شانت راست به چپ"
+    ask_en: "Echocardiography: right-to-left shunting (positive bubble study, overriding aorta)?"
+    ask_fa: "آیا در اکو شانت راست به چپ دیده می‌شود؟ (تست حباب مثبت، آئورت سوارشده)"
+
+  - id: echo_tricuspid_dysplasia
+    codes: []
+    level: test
+    group: structural
+    leak: 0.003
+    en: "Echo - tricuspid valve dysplasia / displaced leaflets with severe right atrial enlargement"
+    fa: "اکو - دیسپلازی تری‌کاسپید"
+    ask_en: "Echocardiography: tricuspid dysplasia (displaced/tethered leaflets) with right atrial enlargement?"
+    ask_fa: "آیا در اکو دیسپلازی دریچهٔ تری‌کاسپید (جابه‌جایی یا چسبندگی لتها) با بزرگی دهلیز راست دیده می‌شود؟"
+
+  - id: echo_atrial_membrane
+    codes: []
+    level: test
+    group: structural
+    leak: 0.001
+    en: "Echo - membrane dividing the atrium (cor triatriatum)"
+    fa: "اکو - پردهٔ تقسیم‌کنندهٔ دهلیز"
+    ask_en: "Echocardiography: membrane dividing an atrium (cor triatriatum)?"
+    ask_fa: "آیا در اکو پرده‌ای که دهلیز را تقسیم می‌کند دیده می‌شود؟"
+
+  - id: echo_pericardial_effusion
+    codes: [6]
+    level: test
+    group: structural
+    leak: 0.01
+    en: "Echo - pericardial effusion"
+    fa: "اکو - افیوژن پریکارد"
+    ask_en: "Echocardiography/ultrasound: pericardial effusion?"
+    ask_fa: "آیا در اکو یا سونوگرافی افیوژن پریکارد دیده می‌شود؟"
+
+  - id: echo_cardiac_mass
+    codes: []
+    level: test
+    group: structural
+    leak: 0.005
+    en: "Echo - right atrial / heart-base / myocardial mass"
+    fa: "اکو - توده در دهلیز راست، قاعدهٔ قلب یا میوکارد"
+    ask_en: "Echocardiography: mass at the right atrium/auricle, heart base, or in the myocardium?"
+    ask_fa: "آیا در اکو توده‌ای در دهلیز راست/گوشک، قاعدهٔ قلب یا میوکارد دیده می‌شود؟"
+
+  - id: echo_vegetation
+    codes: []
+    level: test
+    group: structural
+    leak: 0.003
+    en: "Echo - valvular vegetation (aortic or mitral)"
+    fa: "اکو - وژتاسیون دریچه‌ای"
+    ask_en: "Echocardiography: valvular vegetation / destructive valve lesion (aortic or mitral)?"
+    ask_fa: "آیا در اکو وژتاسیون یا ضایعهٔ مخرب دریچه‌ای (آئورت یا میترال) دیده می‌شود؟"
+
+  - id: echo_restrictive_pattern
+    codes: []
+    level: test
+    group: structural
+    leak: 0.005
+    en: "Echo - marked biatrial enlargement with restrictive filling, near-normal LV walls"
+    fa: "اکو - بزرگی شدید دو دهلیز با الگوی پرشدن محدودشونده"
+    ask_en: "Echocardiography: marked biatrial enlargement with restrictive filling and normal-thickness LV walls (or endomyocardial scarring)?"
+    ask_fa: "آیا در اکو بزرگی شدید هر دو دهلیز با الگوی پرشدن محدودشونده و ضخامت تقریباً طبیعی دیوارهٔ بطن دیده می‌شود؟"
+
+  - id: echo_high_tr_velocity
+    codes: []
+    level: test
+    group: structural
+    leak: 0.04
+    en: "Echo - tricuspid regurgitation velocity >3.4 m/s (pulmonary hypertension)"
+    fa: "اکو - سرعت جت نارسایی تری‌کاسپید بیش از ۳٫۴ متر بر ثانیه"
+    ask_en: "Doppler: tricuspid regurgitation peak velocity >3.4 m/s?"
+    ask_fa: "آیا در داپلر سرعت اوج جت نارسایی تری‌کاسپید بیش از ۳٫۴ متر بر ثانیه است؟"
+
+  - id: echo_heartworms_visible
+    codes: []
+    level: test
+    group: structural
+    leak: 0.001
+    en: "Echo - heartworms visible (pulmonary artery / right heart)"
+    fa: "اکو - مشاهدهٔ کرم قلب"
+    ask_en: "Echocardiography: parallel linear echogenic structures (adult heartworms) in the pulmonary artery or right heart?"
+    ask_fa: "آیا در اکو ساختارهای خطی موازی (کرم بالغ دیروفیلاریا) در شریان ریوی یا قلب راست دیده می‌شود؟"
+
+  - id: ntprobnp_elevated
+    codes: []
+    level: test
+    group: structural
+    leak: 0.12
+    en: "NT-proBNP elevated"
+    fa: "NT-proBNP بالا"
+    ask_en: "NT-proBNP (or feline point-of-care test) above the species reference/cut-off?"
+    ask_fa: "آیا NT-proBNP (یا تست سریع گربه) بالاتر از حد مرجع/ نقطه برش است؟"
+
+  - id: troponin_elevated
+    codes: []
+    level: test
+    group: structural
+    leak: 0.08
+    en: "Cardiac troponin I elevated"
+    fa: "تروپونین I قلبی بالا"
+    ask_en: "Cardiac troponin I elevated?"
+    ask_fa: "آیا تروپونین I قلبی بالا است؟"
+
+  - id: hypertension_measured
+    codes: [4]
+    level: test
+    group: systemic
+    leak: 0.04
+    en: "Systolic blood pressure >160 mmHg (repeatable)"
+    fa: "فشار خون سیستولیک بالای ۱۶۰ میلی‌متر جیوه"
+    ask_en: "Repeatable systolic blood pressure >160 mmHg?"
+    ask_fa: "آیا فشار خون سیستولیک (با اندازه‌گیری تکرارشونده) بیش از ۱۶۰ میلی‌متر جیوه است؟"
+
+  - id: high_total_t4
+    codes: []
+    level: test
+    group: systemic
+    leak: 0.004
+    en: "Total T4 elevated"
+    fa: "T4 تام بالا"
+    ask_en: "Total T4 above reference range?"
+    ask_fa: "آیا T4 تام بالاتر از محدودهٔ مرجع است؟"
+
+  - id: hyperkalemia
+    codes: []
+    level: test
+    group: systemic
+    leak: 0.01
+    en: "Hyperkalemia"
+    fa: "هیپرکالمی"
+    ask_en: "Serum potassium above reference range?"
+    ask_fa: "آیا پتاسیم سرم بالاتر از حد مرجع است؟"
+
+  - id: anemia
+    codes: []
+    level: test
+    group: systemic
+    leak: 0.04
+    en: "Anemia (low PCV/hematocrit)"
+    fa: "کم‌خونی (PCV پایین)"
+    ask_en: "Anemia (PCV/hematocrit below reference range)?"
+    ask_fa: "آیا کم‌خونی (PCV یا هماتوکریت پایین) وجود دارد؟"
+
+  - id: polycythemia
+    codes: []
+    level: test
+    group: systemic
+    leak: 0.005
+    en: "Secondary polycythemia (PCV >65%)"
+    fa: "پلی‌سایتمی ثانویه"
+    ask_en: "Secondary polycythemia (PCV > ~65%)?"
+    ask_fa: "آیا پلی‌سایتمی ثانویه (PCV بیش از حدود ۶۵٪) وجود دارد؟"
+
+  - id: azotemia
+    codes: []
+    level: test
+    group: systemic
+    leak: 0.05
+    en: "Azotemia (increased creatinine/BUN)"
+    fa: "ازتمی (افزایش کراتینین و BUN)"
+    ask_en: "Azotemia (creatinine/BUN above reference range)?"
+    ask_fa: "آیا ازتمی (افزایش کراتینین یا BUN) وجود دارد؟"
+
+  - id: heartworm_antigen_positive
+    codes: []
+    level: test
+    group: systemic
+    parent: heartworm_exposure
+    leak: 0.01
+    en: "Heartworm antigen / microfilaria positive"
+    fa: "آنتی‌ژن یا میکروفیلر کرم قلب مثبت"
+    ask_en: "Heartworm antigen test (or microfilaria test) positive?"
+    ask_fa: "آیا تست آنتی‌ژن کرم قلب (یا میکروفیلر) مثبت است؟"
+
+  - id: blood_culture_positive
+    codes: []
+    level: test
+    group: systemic
+    leak: 0.005
+    en: "Positive blood culture"
+    fa: "کشت خون مثبت"
+    ask_en: "Positive blood culture (or Bartonella serology/PCR)?"
+    ask_fa: "آیا کشت خون مثبت است؟ (یا سرولوژی/PCR بارتونلا)"
